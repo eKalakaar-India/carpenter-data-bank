@@ -224,7 +224,7 @@ export default function Records() {
 
   const triggerExport = (type) => {
     const idsQuery = selectedIds.length > 0 ? `?ids=${selectedIds.join(',')}` : '';
-    axios.get(`/export/${type}${idsQuery}`, { responseType: 'blob' })
+    axios.get(process.env.VITE_API_URL+`/export/${type}${idsQuery}`, { responseType: 'blob' })
       .then(res => {
         const url = window.URL.createObjectURL(new Blob([res.data]));
         const link = document.createElement('a');

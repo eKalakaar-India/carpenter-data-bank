@@ -64,7 +64,7 @@ export const useVaultStore = create((set, get) => ({
   login: async (email, password) => {
     set({ authLoading: true, authError: null });
     try {
-      const response = await axios.post('/auth/login', { email, password });
+      const response = await axios.post(process.env.VITE_API_URL+'/auth/login', { email, password });
       const { token, user } = response.data;
       
       localStorage.setItem('vault_token', token);
@@ -85,7 +85,7 @@ export const useVaultStore = create((set, get) => ({
   signup: async (name, email, password) => {
     set({ authLoading: true, authError: null });
     try {
-      const response = await axios.post('/auth/register', { name, email, password, role: 'ADMIN' });
+      const response = await axios.post(process.env.VITE_API_URL+'/auth/register', { name, email, password, role: 'ADMIN' });
       // Log in automatically after registering
       return get().login(email, password);
     } catch (error) {
@@ -109,7 +109,7 @@ export const useVaultStore = create((set, get) => ({
     set({ recordsLoading: true });
     try {
       const activeFilters = { ...get().filters, ...forceFilters };
-      const response = await axios.get('/records', {
+      const response = await axios.get(process.env.VITE_API_URL+'/records', {
         params: {
           page,
           limit: activeFilters.limit || 20,
@@ -145,7 +145,7 @@ export const useVaultStore = create((set, get) => ({
 
   addRecord: async (recordData) => {
     try {
-      const response = await axios.post('/records', recordData);
+      const response = await axios.post(process.env.VITE_API_URL+'/records', recordData);
       set((state) => ({
         records: [response.data, ...state.records],
         pagination: { ...state.pagination, total: state.pagination.total + 1 }
@@ -158,7 +158,7 @@ export const useVaultStore = create((set, get) => ({
 
   updateRecord: async (id, updatedData) => {
     try {
-      const response = await axios.put(`/records/${id}`, updatedData);
+      const response = await axios.put(process.env.VITE_API_URL+`/records/${id}`, updatedData);
       set((state) => ({
         records: state.records.map(rec => rec.id === id ? response.data : rec)
       }));
@@ -170,7 +170,7 @@ export const useVaultStore = create((set, get) => ({
 
   deleteRecord: async (id) => {
     try {
-      await axios.delete(`/records/${id}`);
+      await axios.delete(process.env.VITE_API_URL+`/records/${id}`);
       // Refetch page to ensure sequential srNo indices are updated
       get().fetchRecords(get().pagination.page);
       return true;
@@ -182,7 +182,7 @@ export const useVaultStore = create((set, get) => ({
 
   bulkDeleteRecords: async (ids) => {
     try {
-      await axios.post('/records/bulk-delete', { ids });
+      await axios.post(process.env.VITE_API_URL+'/records/bulk-delete', { ids });
       get().fetchRecords(1);
       return true;
     } catch (error) {
@@ -193,7 +193,7 @@ export const useVaultStore = create((set, get) => ({
 
   deduplicateRecords: async () => {
     try {
-      const response = await axios.post('/records/deduplicate');
+      const response = await axios.post(process.env.VITE_API_URL+'/records/deduplicate');
       get().fetchRecords(1);
       return response.data;
     } catch (error) {
@@ -207,7 +207,7 @@ export const useVaultStore = create((set, get) => ({
     formData.append('file', file);
     formData.append('docType', docType);
     try {
-      const response = await axios.post(`/records/${recordId}/upload-document`, formData, {
+      const response = await axios.post(process.env.VITE_API_URL+`/records/${recordId}/upload-document`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       // Refetch records to get updated document path
@@ -226,7 +226,7 @@ export const useVaultStore = create((set, get) => ({
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await axios.post('/upload/preview', formData, {
+      const response = await axios.post(process.env.VITE_API_URL+'/upload/preview', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -242,7 +242,7 @@ export const useVaultStore = create((set, get) => ({
   importFileFinal: async (filePath, mapping, fileName) => {
     set({ uploadLoading: true });
     try {
-      const response = await axios.post('/upload/import', { filePath, mapping, fileName });
+      const response = await axios.post(process.env.VITE_API_URL+'/upload/import', { filePath, mapping, fileName });
       set({ uploadPreview: null, uploadLoading: false });
       get().fetchRecords(1);
       return response.data;
@@ -254,7 +254,7 @@ export const useVaultStore = create((set, get) => ({
 
   fetchImportHistory: async () => {
     try {
-      const response = await axios.get('/imports');
+      const response = await axios.get(process.env.VITE_API_URL+'/imports');
       set({ importHistory: response.data });
     } catch (error) {
       console.error('Failed to load upload history logs:', error);
@@ -265,7 +265,7 @@ export const useVaultStore = create((set, get) => ({
   fetchAnalytics: async () => {
     set({ analyticsLoading: true });
     try {
-      const response = await axios.get('/analytics');
+      const response = await axios.get(process.env.VITE_API_URL+'/analytics');
       set({ analyticsData: response.data, analyticsLoading: false });
     } catch (error) {
       set({ analyticsLoading: false });
@@ -275,7 +275,7 @@ export const useVaultStore = create((set, get) => ({
 
   fetchActivityLogs: async () => {
     try {
-      const response = await axios.get('/activity-logs');
+      const response = await axios.get(process.env.VITE_API_URL+'/activity-logs');
       set({ activityLogs: response.data });
     } catch (error) {
       console.error('Failed to fetch admin security trails:', error);
