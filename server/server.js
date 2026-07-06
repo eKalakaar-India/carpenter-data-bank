@@ -33,24 +33,24 @@ const JWT_SECRET = process.env.JWT_SECRET || 'carpenter_vault_luxury_secret_key'
 app.use(cors());
 app.use(express.json());
 
-// Setup static uploads folder
-const uploadDir = path.join(__dirname, '..', 'uploads', 'documents');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+// // Setup static uploads folder
+// const uploadDir = path.join(__dirname, '..', 'uploads', 'documents');
+// if (!fs.existsSync(uploadDir)) {
+//   fs.mkdirSync(uploadDir, { recursive: true });
+// }
+// app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
-// Configure Multer storage
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
-const upload = multer({ storage: storage });
+// // Configure Multer storage
+// const storage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     cb(null, uploadDir);
+//   },
+//   filename: function (req, file, cb) {
+//     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+//     cb(null, uniqueSuffix + path.extname(file.originalname));
+//   }
+// });
+// const upload = multer({ storage: storage });
 
 // Temporary upload preview parser storage
 const tempUpload = multer({ dest: path.join(__dirname, '..', 'uploads', 'temp') });
@@ -1073,45 +1073,45 @@ app.post('/api/upload/import', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/records/:id/upload-document', authenticateToken, upload.single('file'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { docType } = req.body; // 'certificate', 'insurance1', 'insurance2'
+// app.post('/api/records/:id/upload-document', authenticateToken, upload.single('file'), async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { docType } = req.body; // 'certificate', 'insurance1', 'insurance2'
 
-    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+//     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
-    const localAssetPath = `/uploads/documents/${req.file.filename}`;
-    const updateData = {};
+//     const localAssetPath = `/uploads/documents/${req.file.filename}`;
+//     const updateData = {};
 
-    if (docType === 'certificate') {
-      updateData.certificateLink = localAssetPath;
-    } else if (docType === 'insurance1') {
-      updateData.insuranceLink1 = localAssetPath;
-    } else if (docType === 'insurance2') {
-      updateData.insuranceLink2 = localAssetPath;
-    } else {
-      return res.status(400).json({ error: 'Invalid document target parameter' });
-    }
+//     if (docType === 'certificate') {
+//       updateData.certificateLink = localAssetPath;
+//     } else if (docType === 'insurance1') {
+//       updateData.insuranceLink1 = localAssetPath;
+//     } else if (docType === 'insurance2') {
+//       updateData.insuranceLink2 = localAssetPath;
+//     } else {
+//       return res.status(400).json({ error: 'Invalid document target parameter' });
+//     }
 
-    const updated = await prisma.record.update({
-      where: { id },
-      data: updateData
-    });
+//     const updated = await prisma.record.update({
+//       where: { id },
+//       data: updateData
+//     });
 
-    await prisma.activityLog.create({
-      data: {
-        userId: req.user.id,
-        userName: req.user.name,
-        action: 'UPLOAD_DOCUMENT',
-        details: `Uploaded ${docType} for ${updated.nameOfCarpenter}`
-      }
-    });
+//     await prisma.activityLog.create({
+//       data: {
+//         userId: req.user.id,
+//         userName: req.user.name,
+//         action: 'UPLOAD_DOCUMENT',
+//         details: `Uploaded ${docType} for ${updated.nameOfCarpenter}`
+//       }
+//     });
 
-    res.json({ message: 'Document uploaded successfully', path: localAssetPath });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+//     res.json({ message: 'Document uploaded successfully', path: localAssetPath });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
 
 // ----------------------------------------------------
 // Export Ledger Data Endpoints
