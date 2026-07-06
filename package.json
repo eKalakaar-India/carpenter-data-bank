@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev:server": "node server/server.js",
+    "dev": "node server/server.js",
     "dev:client": "vite",
     "start": "node server/server.js",
     "build:client": "vite build",

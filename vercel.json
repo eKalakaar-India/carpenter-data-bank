@@ -1,14 +1,1 @@
-{
-  "version": 2,
-  "functions": {
-    "server/server.js": {
-      "runtime": "@vercel/node"
-    }
-  },
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/server/server.js"
-    }
-  ]
-}
+{"version":2,"functions":{"server/server.js":{"runtime":"@vercel/node","includeFiles":"prisma/**"}},"routes":[{"src":"/(.*)","dest":"/server/server.js"}]}
