@@ -1296,6 +1296,10 @@ app.get('/api/analytics', authenticateToken, async (req, res) => {
   }
 });
 
+app.get('/', ()=>{
+  console.log("Carpenter backend")
+  res.send("Welcome to carpenter dashboard")
+})
 
 export default app;
 
