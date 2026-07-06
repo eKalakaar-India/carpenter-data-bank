@@ -53,7 +53,7 @@ app.use(express.json());
 // const upload = multer({ storage: storage });
 
 // Temporary upload preview parser storage
-const tempUpload = multer({ dest: path.join(__dirname, '..', 'uploads', 'temp') });
+// const tempUpload = multer({ dest: path.join(__dirname, '..', 'uploads', 'temp') });
 
 // JWT Middleware
 function authenticateToken(req, res, next) {
@@ -646,432 +646,432 @@ app.post('/api/records/deduplicate', authenticateToken, async (req, res) => {
 // ----------------------------------------------------
 // File Upload & Data Ingestion Pipeline
 // ----------------------------------------------------
-app.post('/api/upload/preview', authenticateToken, tempUpload.single('file'), async (req, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+// app.post('/api/upload/preview', authenticateToken, tempUpload.single('file'), async (req, res) => {
+//   try {
+//     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
-    const filePath = req.file.path;
-    const isExcel = req.file.originalname.endsWith('.xlsx') || req.file.originalname.endsWith('.xls');
-    const previewRows = [];
-    let headers = [];
-    let totalRows = 0;
+//     const filePath = req.file.path;
+//     const isExcel = req.file.originalname.endsWith('.xlsx') || req.file.originalname.endsWith('.xls');
+//     const previewRows = [];
+//     let headers = [];
+//     let totalRows = 0;
 
-    if (isExcel) {
-      const workbook = xlsx.readFile(filePath);
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
+//     if (isExcel) {
+//       const workbook = xlsx.readFile(filePath);
+//       const sheetName = workbook.SheetNames[0];
+//       const sheet = workbook.Sheets[sheetName];
 
-      // Scan worksheet for hyperlink targets and insert them directly into values
-      function parseExcelDate(serial) {
-        const num = Number(serial);
-        if (isNaN(num) || num <= 0) return String(serial);
-        const utc_days = Math.floor(num - 25569);
-        const utc_value = utc_days * 86400;
-        const date_info = new Date(utc_value * 1000);
-        const day = String(date_info.getDate()).padStart(2, '0');
-        const month = String(date_info.getMonth() + 1).padStart(2, '0');
-        const year = date_info.getFullYear();
-        return `${day}.${month}.${year}`;
-      }
+//       // Scan worksheet for hyperlink targets and insert them directly into values
+//       function parseExcelDate(serial) {
+//         const num = Number(serial);
+//         if (isNaN(num) || num <= 0) return String(serial);
+//         const utc_days = Math.floor(num - 25569);
+//         const utc_value = utc_days * 86400;
+//         const date_info = new Date(utc_value * 1000);
+//         const day = String(date_info.getDate()).padStart(2, '0');
+//         const month = String(date_info.getMonth() + 1).padStart(2, '0');
+//         const year = date_info.getFullYear();
+//         return `${day}.${month}.${year}`;
+//       }
 
-      for (let cellRef in sheet) {
-        if (cellRef[0] === '!') continue;
-        const cell = sheet[cellRef];
-        if (!cell) continue;
-        if (cell.l && cell.l.Target) {
-          cell.v = cell.l.Target; // Use the actual target link
-        } else if (cell.t === 'n' && (cell.v > 10000 && cell.v < 60000) && (cellRef.startsWith('M') || cellRef.startsWith('BC') || cellRef.startsWith('B') || cellRef.startsWith('BD') || cellRef.startsWith('BE') || cellRef.startsWith('BF'))) {
-          cell.v = parseExcelDate(cell.v);
-          cell.t = 's';
-        }
-      }
+//       for (let cellRef in sheet) {
+//         if (cellRef[0] === '!') continue;
+//         const cell = sheet[cellRef];
+//         if (!cell) continue;
+//         if (cell.l && cell.l.Target) {
+//           cell.v = cell.l.Target; // Use the actual target link
+//         } else if (cell.t === 'n' && (cell.v > 10000 && cell.v < 60000) && (cellRef.startsWith('M') || cellRef.startsWith('BC') || cellRef.startsWith('B') || cellRef.startsWith('BD') || cellRef.startsWith('BE') || cellRef.startsWith('BF'))) {
+//           cell.v = parseExcelDate(cell.v);
+//           cell.t = 's';
+//         }
+//       }
 
-      const json = xlsx.utils.sheet_to_json(sheet, { defval: "" });
-      if (json.length > 0) {
-        headers = Object.keys(json[0]);
-        // Filter out empty rows (where all values are blank/whitespace)
-        const filtered = json.filter(row => Object.values(row).some(v => v !== null && v !== undefined && String(v).trim() !== ''));
-        totalRows = filtered.length;
-        previewRows.push(...filtered.slice(0, 5));
-      }
-    } else {
-      // Parse CSV File Preview
-      await new Promise((resolve, reject) => {
-        fs.createReadStream(filePath)
-          .pipe(csvParser())
-          .on('headers', (h) => {
-            headers = h;
-          })
-          .on('data', (data) => {
-            // Filter empty rows for CSV too
-            const hasData = Object.values(data).some(v => v !== null && v !== undefined && String(v).trim() !== '');
-            if (hasData) {
-              totalRows++;
-              if (previewRows.length < 5) {
-                previewRows.push(data);
-              }
-            }
-          })
-          .on('end', resolve)
-          .on('error', reject);
-      });
-    }
+//       const json = xlsx.utils.sheet_to_json(sheet, { defval: "" });
+//       if (json.length > 0) {
+//         headers = Object.keys(json[0]);
+//         // Filter out empty rows (where all values are blank/whitespace)
+//         const filtered = json.filter(row => Object.values(row).some(v => v !== null && v !== undefined && String(v).trim() !== ''));
+//         totalRows = filtered.length;
+//         previewRows.push(...filtered.slice(0, 5));
+//       }
+//     } else {
+//       // Parse CSV File Preview
+//       await new Promise((resolve, reject) => {
+//         fs.createReadStream(filePath)
+//           .pipe(csvParser())
+//           .on('headers', (h) => {
+//             headers = h;
+//           })
+//           .on('data', (data) => {
+//             // Filter empty rows for CSV too
+//             const hasData = Object.values(data).some(v => v !== null && v !== undefined && String(v).trim() !== '');
+//             if (hasData) {
+//               totalRows++;
+//               if (previewRows.length < 5) {
+//                 previewRows.push(data);
+//               }
+//             }
+//           })
+//           .on('end', resolve)
+//           .on('error', reject);
+//       });
+//     }
 
-    // Keep temporary file path reference returned to frontend store mapping confirmation
-    res.json({
-      filePath: req.file.filename,
-      fileName: req.file.originalname,
-      headers,
-      previewRows,
-      totalRows
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+//     // Keep temporary file path reference returned to frontend store mapping confirmation
+//     res.json({
+//       filePath: req.file.filename,
+//       fileName: req.file.originalname,
+//       headers,
+//       previewRows,
+//       totalRows
+//     });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
 
-app.post('/api/upload/import', authenticateToken, async (req, res) => {
-  try {
-    const { filePath, mapping, fileName } = req.body;
-    if (!filePath || !mapping) return res.status(400).json({ error: 'Missing import configurations' });
+// app.post('/api/upload/import', authenticateToken, async (req, res) => {
+//   try {
+//     const { filePath, mapping, fileName } = req.body;
+//     if (!filePath || !mapping) return res.status(400).json({ error: 'Missing import configurations' });
 
-    const tempPath = path.join(__dirname, '..', 'uploads', 'temp', filePath);
-    if (!fs.existsSync(tempPath)) {
-      return res.status(404).json({ error: 'Temp data upload session expired or not found' });
-    }
+//     const tempPath = path.join(__dirname, '..', 'uploads', 'temp', filePath);
+//     if (!fs.existsSync(tempPath)) {
+//       return res.status(404).json({ error: 'Temp data upload session expired or not found' });
+//     }
 
-    const checkName = fileName || filePath || '';
-    const isExcel = checkName.endsWith('.xlsx') || checkName.endsWith('.xls');
-    let parsedRows = [];
+//     const checkName = fileName || filePath || '';
+//     const isExcel = checkName.endsWith('.xlsx') || checkName.endsWith('.xls');
+//     let parsedRows = [];
 
-    if (isExcel) {
-      const workbook = xlsx.readFile(tempPath);
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
+//     if (isExcel) {
+//       const workbook = xlsx.readFile(tempPath);
+//       const sheetName = workbook.SheetNames[0];
+//       const sheet = workbook.Sheets[sheetName];
 
-      // Scan worksheet for hyperlink targets and insert them directly into values
-      function parseExcelDate(serial) {
-        const num = Number(serial);
-        if (isNaN(num) || num <= 0) return String(serial);
-        const utc_days = Math.floor(num - 25569);
-        const utc_value = utc_days * 86400;
-        const date_info = new Date(utc_value * 1000);
-        const day = String(date_info.getDate()).padStart(2, '0');
-        const month = String(date_info.getMonth() + 1).padStart(2, '0');
-        const year = date_info.getFullYear();
-        return `${day}.${month}.${year}`;
-      }
+//       // Scan worksheet for hyperlink targets and insert them directly into values
+//       function parseExcelDate(serial) {
+//         const num = Number(serial);
+//         if (isNaN(num) || num <= 0) return String(serial);
+//         const utc_days = Math.floor(num - 25569);
+//         const utc_value = utc_days * 86400;
+//         const date_info = new Date(utc_value * 1000);
+//         const day = String(date_info.getDate()).padStart(2, '0');
+//         const month = String(date_info.getMonth() + 1).padStart(2, '0');
+//         const year = date_info.getFullYear();
+//         return `${day}.${month}.${year}`;
+//       }
 
-      for (let cellRef in sheet) {
-        if (cellRef[0] === '!') continue;
-        const cell = sheet[cellRef];
-        if (!cell) continue;
-        if (cell.l && cell.l.Target) {
-          cell.v = cell.l.Target; // Use the actual target link
-        } else if (cell.t === 'n' && (cell.v > 10000 && cell.v < 60000) && (cellRef.startsWith('M') || cellRef.startsWith('BC') || cellRef.startsWith('B') || cellRef.startsWith('BD') || cellRef.startsWith('BE') || cellRef.startsWith('BE') || cellRef.startsWith('BF'))) {
-          cell.v = parseExcelDate(cell.v);
-          cell.t = 's';
-        }
-      }
+//       for (let cellRef in sheet) {
+//         if (cellRef[0] === '!') continue;
+//         const cell = sheet[cellRef];
+//         if (!cell) continue;
+//         if (cell.l && cell.l.Target) {
+//           cell.v = cell.l.Target; // Use the actual target link
+//         } else if (cell.t === 'n' && (cell.v > 10000 && cell.v < 60000) && (cellRef.startsWith('M') || cellRef.startsWith('BC') || cellRef.startsWith('B') || cellRef.startsWith('BD') || cellRef.startsWith('BE') || cellRef.startsWith('BE') || cellRef.startsWith('BF'))) {
+//           cell.v = parseExcelDate(cell.v);
+//           cell.t = 's';
+//         }
+//       }
 
-      const rawRows = xlsx.utils.sheet_to_json(sheet, { defval: "" });
-      // Filter out empty rows where all values are blank
-      parsedRows = rawRows.filter(row => Object.values(row).some(v => v !== null && v !== undefined && String(v).trim() !== ''));
-    } else {
-      await new Promise((resolve, reject) => {
-        const rows = [];
-        fs.createReadStream(tempPath)
-          .pipe(csvParser())
-          .on('data', (data) => rows.push(data))
-          .on('end', () => {
-            parsedRows = rows;
-            resolve();
-          })
-          .on('error', reject);
-      });
-    }
+//       const rawRows = xlsx.utils.sheet_to_json(sheet, { defval: "" });
+//       // Filter out empty rows where all values are blank
+//       parsedRows = rawRows.filter(row => Object.values(row).some(v => v !== null && v !== undefined && String(v).trim() !== ''));
+//     } else {
+//       await new Promise((resolve, reject) => {
+//         const rows = [];
+//         fs.createReadStream(tempPath)
+//           .pipe(csvParser())
+//           .on('data', (data) => rows.push(data))
+//           .on('end', () => {
+//             parsedRows = rows;
+//             resolve();
+//           })
+//           .on('error', reject);
+//       });
+//     }
 
-    let success = 0;
-    let failed = 0;
-    let duplicates = 0;
-    const diagnostics = [];
+//     let success = 0;
+//     let failed = 0;
+//     let duplicates = 0;
+//     const diagnostics = [];
 
-    // Preload active database cache names and communication map list structures
-    const existingRecords = await prisma.record.findMany({ where: { isDeleted: false } });
-    const maxRecord = await prisma.record.findFirst({
-      where: { isDeleted: false },
-      orderBy: { srNo: 'desc' }
-    });
-    let currentMaxSr = maxRecord ? (maxRecord.srNo || 0) : 0;
+//     // Preload active database cache names and communication map list structures
+//     const existingRecords = await prisma.record.findMany({ where: { isDeleted: false } });
+//     const maxRecord = await prisma.record.findFirst({
+//       where: { isDeleted: false },
+//       orderBy: { srNo: 'desc' }
+//     });
+//     let currentMaxSr = maxRecord ? (maxRecord.srNo || 0) : 0;
 
-    const importOps = [];
+//     const importOps = [];
 
-    for (let index = 0; index < parsedRows.length; index++) {
-      const row = parsedRows[index];
+//     for (let index = 0; index < parsedRows.length; index++) {
+//       const row = parsedRows[index];
       
-      try {
-        let nameOfCarpenter = row[mapping.fullName] || row[mapping.nameOfCarpenter] || "";
-        if (!nameOfCarpenter) {
-          const parts = [];
-          if (mapping.firstName && row[mapping.firstName]) parts.push(row[mapping.firstName]);
-          if (mapping.middleName && row[mapping.middleName]) parts.push(row[mapping.middleName]);
-          if (mapping.lastName && row[mapping.lastName]) parts.push(row[mapping.lastName]);
-          nameOfCarpenter = parts.join(' ').trim();
-        }
-        nameOfCarpenter = nameOfCarpenter.trim();
+//       try {
+//         let nameOfCarpenter = row[mapping.fullName] || row[mapping.nameOfCarpenter] || "";
+//         if (!nameOfCarpenter) {
+//           const parts = [];
+//           if (mapping.firstName && row[mapping.firstName]) parts.push(row[mapping.firstName]);
+//           if (mapping.middleName && row[mapping.middleName]) parts.push(row[mapping.middleName]);
+//           if (mapping.lastName && row[mapping.lastName]) parts.push(row[mapping.lastName]);
+//           nameOfCarpenter = parts.join(' ').trim();
+//         }
+//         nameOfCarpenter = nameOfCarpenter.trim();
 
-        let nomineeName = row[mapping.nomineeName] || "";
-        if (!nomineeName) {
-          const nomineeParts = [];
-          if (mapping.nomineeFirstName && row[mapping.nomineeFirstName]) nomineeParts.push(row[mapping.nomineeFirstName]);
-          if (mapping.nomineeMiddleName && row[mapping.nomineeMiddleName]) nomineeParts.push(row[mapping.nomineeMiddleName]);
-          if (mapping.nomineeLastName && row[mapping.nomineeLastName]) nomineeParts.push(row[mapping.nomineeLastName]);
-          nomineeName = nomineeParts.join(' ').trim();
-        }
+//         let nomineeName = row[mapping.nomineeName] || "";
+//         if (!nomineeName) {
+//           const nomineeParts = [];
+//           if (mapping.nomineeFirstName && row[mapping.nomineeFirstName]) nomineeParts.push(row[mapping.nomineeFirstName]);
+//           if (mapping.nomineeMiddleName && row[mapping.nomineeMiddleName]) nomineeParts.push(row[mapping.nomineeMiddleName]);
+//           if (mapping.nomineeLastName && row[mapping.nomineeLastName]) nomineeParts.push(row[mapping.nomineeLastName]);
+//           nomineeName = nomineeParts.join(' ').trim();
+//         }
 
-        const nameOfOrganization = String(row[mapping.nameOfOrganization] || "").trim();
-        const specialization = String(row[mapping.specialization] || "").trim();
-        const remarks = String(row[mapping.remarks] || "").trim();
-        const customColumn = String(row[mapping.customColumn] || "").trim();
+//         const nameOfOrganization = String(row[mapping.nameOfOrganization] || "").trim();
+//         const specialization = String(row[mapping.specialization] || "").trim();
+//         const remarks = String(row[mapping.remarks] || "").trim();
+//         const customColumn = String(row[mapping.customColumn] || "").trim();
 
-        // Smart State resolution: try multiple state columns, pick first non-empty
-        const stateVal = row[mapping.state] || "";
-        let resolvedState = stateVal;
-        if (!resolvedState) {
-          const stateCandidates = ['DomicileState', 'PermanentAddressState', 'CommunicationAddressState'];
-          for (const sc of stateCandidates) {
-            if (row[sc] && String(row[sc]).trim()) { resolvedState = String(row[sc]).trim(); break; }
-          }
-        }
+//         // Smart State resolution: try multiple state columns, pick first non-empty
+//         const stateVal = row[mapping.state] || "";
+//         let resolvedState = stateVal;
+//         if (!resolvedState) {
+//           const stateCandidates = ['DomicileState', 'PermanentAddressState', 'CommunicationAddressState'];
+//           for (const sc of stateCandidates) {
+//             if (row[sc] && String(row[sc]).trim()) { resolvedState = String(row[sc]).trim(); break; }
+//           }
+//         }
 
-        // Smart District/City resolution: try multiple columns, pick first non-empty
-        const distVal = row[mapping.districtCity] || "";
-        let resolvedDistrict = distVal;
-        if (!resolvedDistrict) {
-          const distCandidates = ['PermanentAddressDistrict', 'PermanentAddressCity', 'CommunicationAddressDistrict', 'CommunicationAddressCity'];
-          for (const dc of distCandidates) {
-            if (row[dc] && String(row[dc]).trim()) { resolvedDistrict = String(row[dc]).trim(); break; }
-          }
-        }
+//         // Smart District/City resolution: try multiple columns, pick first non-empty
+//         const distVal = row[mapping.districtCity] || "";
+//         let resolvedDistrict = distVal;
+//         if (!resolvedDistrict) {
+//           const distCandidates = ['PermanentAddressDistrict', 'PermanentAddressCity', 'CommunicationAddressDistrict', 'CommunicationAddressCity'];
+//           for (const dc of distCandidates) {
+//             if (row[dc] && String(row[dc]).trim()) { resolvedDistrict = String(row[dc]).trim(); break; }
+//           }
+//         }
 
-        // Smart Address consolidation: merge multiple address columns
-        const addressCols = ['PermanentAddressAddress', 'PermanentAddressPINCode', 'PermanentAddressTehsil', 'PermanentAddressConstituency'];
-        const addressParts = [];
-        if (mapping.address && row[mapping.address]) {
-          addressParts.push(String(row[mapping.address]).trim());
-        }
-        // Also pull from known address columns directly
-        for (const ac of addressCols) {
-          if (row[ac] && String(row[ac]).trim() && !addressParts.includes(String(row[ac]).trim())) {
-            addressParts.push(String(row[ac]).trim());
-          }
-        }
-        const address = addressParts.join(', ');
+//         // Smart Address consolidation: merge multiple address columns
+//         const addressCols = ['PermanentAddressAddress', 'PermanentAddressPINCode', 'PermanentAddressTehsil', 'PermanentAddressConstituency'];
+//         const addressParts = [];
+//         if (mapping.address && row[mapping.address]) {
+//           addressParts.push(String(row[mapping.address]).trim());
+//         }
+//         // Also pull from known address columns directly
+//         for (const ac of addressCols) {
+//           if (row[ac] && String(row[ac]).trim() && !addressParts.includes(String(row[ac]).trim())) {
+//             addressParts.push(String(row[ac]).trim());
+//           }
+//         }
+//         const address = addressParts.join(', ');
         
-        // Multi-column mapping consolidation for communications
-        const commParts = [];
-        if (mapping.communication && Array.isArray(mapping.communication)) {
-          mapping.communication.forEach(col => {
-            if (row[col]) commParts.push(String(row[col]).trim());
-          });
-        } else if (mapping.communication && row[mapping.communication]) {
-          commParts.push(String(row[mapping.communication]).trim());
-        }
-        // Also directly check MobileNo and EmailID columns
-        if (row['MobileNo'] && !commParts.includes(String(row['MobileNo']).trim())) commParts.push(String(row['MobileNo']).trim());
-        if (row['EmailID'] && !commParts.includes(String(row['EmailID']).trim())) commParts.push(String(row['EmailID']).trim());
+//         // Multi-column mapping consolidation for communications
+//         const commParts = [];
+//         if (mapping.communication && Array.isArray(mapping.communication)) {
+//           mapping.communication.forEach(col => {
+//             if (row[col]) commParts.push(String(row[col]).trim());
+//           });
+//         } else if (mapping.communication && row[mapping.communication]) {
+//           commParts.push(String(row[mapping.communication]).trim());
+//         }
+//         // Also directly check MobileNo and EmailID columns
+//         if (row['MobileNo'] && !commParts.includes(String(row['MobileNo']).trim())) commParts.push(String(row['MobileNo']).trim());
+//         if (row['EmailID'] && !commParts.includes(String(row['EmailID']).trim())) commParts.push(String(row['EmailID']).trim());
         
-        const communicationStr = commParts.join(', ');
+//         const communicationStr = commParts.join(', ');
 
-        const rawRecord = {
-          nameOfCarpenter,
-          nameOfOrganization,
-          specialization,
-          communication: communicationStr,
-          state: resolvedState,
-          districtCity: resolvedDistrict,
-          address,
-          certificateLink: String(row[mapping.certificateLink] || ""),
-          insuranceLink1: String(row[mapping.insuranceLink1] || ""),
-          insuranceLink2: String(row[mapping.insuranceLink2] || ""),
-          customColumn,
-          remarks,
-          enrollmentNumber: String(row[mapping.enrollmentNumber] || ""),
-          enrollmentDate: String(row[mapping.enrollmentDate] || ""),
-          subdivision: String(row[mapping.subdivision] || ""),
-          firstName: String(row[mapping.firstName] || ""),
-          middleName: String(row[mapping.middleName] || ""),
-          lastName: String(row[mapping.lastName] || ""),
-          fullName: nameOfCarpenter,
-          enrollmentNumRegister: String(row[mapping.enrollmentNumRegister] || ""),
-          enrollmentYear: String(row[mapping.enrollmentYear] || ""),
-          enrollmentMonth: String(row[mapping.enrollmentMonth] || ""),
-          reasonFor: String(row[mapping.reasonFor] || ""),
-          reasonForEdit: String(row[mapping.reasonForEdit] || ""),
-          carpenterId: String(row[mapping.carpenterId] || ""),
-          motherName: String(row[mapping.motherName] || ""),
-          fatherName: String(row[mapping.fatherName] || ""),
-          husbandName: String(row[mapping.husbandName] || ""),
-          religion: String(row[mapping.religion] || ""),
-          workability: String(row[mapping.workability] || ""),
-          physicalDisability: String(row[mapping.physicalDisability] || ""),
-          officer: String(row[mapping.officer] || ""),
-          officeName: String(row[mapping.officeName] || ""),
-          salutation: String(row[mapping.salutation] || ""),
-          certificateNumber: String(row[mapping.certificateNumber] || ""),
-          candidateNumber: String(row[mapping.candidateNumber] || ""),
-          dateOfBirth: String(row[mapping.dateOfBirth] || ""),
-          occupationProfession: String(row[mapping.occupationProfession] || ""),
-          maritalStatus: String(row[mapping.maritalStatus] || ""),
-          guardiansName: String(row[mapping.guardiansName] || ""),
-          disability: String(row[mapping.disability] || ""),
-          typeofDisability: String(row[mapping.typeofDisability] || ""),
-          pinCode: String(row[mapping.pinCode] || ""),
-          idType: String(row[mapping.idType] || ""),
-          typeofAlternateID: String(row[mapping.typeofAlternateID] || ""),
-          idNo: String(row[mapping.idNo] || ""),
-          educationLevel: String(row[mapping.educationLevel] || ""),
-          preTrainingStatus: String(row[mapping.preTrainingStatus] || ""),
-          previousExperienceSector: String(row[mapping.previousExperienceSector] || ""),
-          noofmonthsofpreviousexperience: String(row[mapping.noofmonthsofpreviousexperience] || ""),
-          employed: String(row[mapping.employed] || ""),
-          employmentStatus: String(row[mapping.employmentStatus] || ""),
-          employmentDetails: String(row[mapping.employmentDetails] || ""),
-          heardAboutUs: String(row[mapping.heardAboutUs] || ""),
-          nomineeName: String(nomineeName || ""),
-          nomineeGender: String(row[mapping.nomineeGender] || ""),
-          nomineeDOB: String(row[mapping.nomineeDOB] || ""),
-          nomineeRelationship: String(row[mapping.nomineeRelationship] || ""),
-          emptyColumn: String(row[mapping.emptyColumn] || "")
-        };
+//         const rawRecord = {
+//           nameOfCarpenter,
+//           nameOfOrganization,
+//           specialization,
+//           communication: communicationStr,
+//           state: resolvedState,
+//           districtCity: resolvedDistrict,
+//           address,
+//           certificateLink: String(row[mapping.certificateLink] || ""),
+//           insuranceLink1: String(row[mapping.insuranceLink1] || ""),
+//           insuranceLink2: String(row[mapping.insuranceLink2] || ""),
+//           customColumn,
+//           remarks,
+//           enrollmentNumber: String(row[mapping.enrollmentNumber] || ""),
+//           enrollmentDate: String(row[mapping.enrollmentDate] || ""),
+//           subdivision: String(row[mapping.subdivision] || ""),
+//           firstName: String(row[mapping.firstName] || ""),
+//           middleName: String(row[mapping.middleName] || ""),
+//           lastName: String(row[mapping.lastName] || ""),
+//           fullName: nameOfCarpenter,
+//           enrollmentNumRegister: String(row[mapping.enrollmentNumRegister] || ""),
+//           enrollmentYear: String(row[mapping.enrollmentYear] || ""),
+//           enrollmentMonth: String(row[mapping.enrollmentMonth] || ""),
+//           reasonFor: String(row[mapping.reasonFor] || ""),
+//           reasonForEdit: String(row[mapping.reasonForEdit] || ""),
+//           carpenterId: String(row[mapping.carpenterId] || ""),
+//           motherName: String(row[mapping.motherName] || ""),
+//           fatherName: String(row[mapping.fatherName] || ""),
+//           husbandName: String(row[mapping.husbandName] || ""),
+//           religion: String(row[mapping.religion] || ""),
+//           workability: String(row[mapping.workability] || ""),
+//           physicalDisability: String(row[mapping.physicalDisability] || ""),
+//           officer: String(row[mapping.officer] || ""),
+//           officeName: String(row[mapping.officeName] || ""),
+//           salutation: String(row[mapping.salutation] || ""),
+//           certificateNumber: String(row[mapping.certificateNumber] || ""),
+//           candidateNumber: String(row[mapping.candidateNumber] || ""),
+//           dateOfBirth: String(row[mapping.dateOfBirth] || ""),
+//           occupationProfession: String(row[mapping.occupationProfession] || ""),
+//           maritalStatus: String(row[mapping.maritalStatus] || ""),
+//           guardiansName: String(row[mapping.guardiansName] || ""),
+//           disability: String(row[mapping.disability] || ""),
+//           typeofDisability: String(row[mapping.typeofDisability] || ""),
+//           pinCode: String(row[mapping.pinCode] || ""),
+//           idType: String(row[mapping.idType] || ""),
+//           typeofAlternateID: String(row[mapping.typeofAlternateID] || ""),
+//           idNo: String(row[mapping.idNo] || ""),
+//           educationLevel: String(row[mapping.educationLevel] || ""),
+//           preTrainingStatus: String(row[mapping.preTrainingStatus] || ""),
+//           previousExperienceSector: String(row[mapping.previousExperienceSector] || ""),
+//           noofmonthsofpreviousexperience: String(row[mapping.noofmonthsofpreviousexperience] || ""),
+//           employed: String(row[mapping.employed] || ""),
+//           employmentStatus: String(row[mapping.employmentStatus] || ""),
+//           employmentDetails: String(row[mapping.employmentDetails] || ""),
+//           heardAboutUs: String(row[mapping.heardAboutUs] || ""),
+//           nomineeName: String(nomineeName || ""),
+//           nomineeGender: String(row[mapping.nomineeGender] || ""),
+//           nomineeDOB: String(row[mapping.nomineeDOB] || ""),
+//           nomineeRelationship: String(row[mapping.nomineeRelationship] || ""),
+//           emptyColumn: String(row[mapping.emptyColumn] || "")
+//         };
 
-        // Ingestion Validator & Cleanups
-        const validated = validateRow(rawRecord);
+//         // Ingestion Validator & Cleanups
+//         const validated = validateRow(rawRecord);
 
-        // O(1) Memory duplicates check
-        const isDuplicate = existingRecords.some(r => isSamePerson(r, validated));
+//         // O(1) Memory duplicates check
+//         const isDuplicate = existingRecords.some(r => isSamePerson(r, validated));
 
-        if (isDuplicate) {
-          duplicates++;
-          diagnostics.push({ row: index + 1, status: 'DUPLICATE', details: `Duplicate carpenter found: ${validated.nameOfCarpenter}` });
-          continue;
-        }
+//         if (isDuplicate) {
+//           duplicates++;
+//           diagnostics.push({ row: index + 1, status: 'DUPLICATE', details: `Duplicate carpenter found: ${validated.nameOfCarpenter}` });
+//           continue;
+//         }
 
-        currentMaxSr++;
-        importOps.push(
-          prisma.record.create({
-            data: {
-              srNo: currentMaxSr,
-              category: row[mapping.category] || 'Other',
-              nameOfCarpenter: validated.nameOfCarpenter,
-              nameOfOrganization: validated.nameOfOrganization,
-              specialization: validated.specialization,
-              communication: validated.communication,
-              state: validated.state,
-              districtCity: validated.districtCity,
-              address: validated.address,
-              certificateLink: validated.certificateLink,
-              insuranceLink1: validated.insuranceLink1,
-              insuranceLink2: validated.insuranceLink2,
-              customColumn: validated.customColumn,
-              remarks: validated.remarks,
-              enrollmentNumber: validated.enrollmentNumber,
-              enrollmentDate: validated.enrollmentDate,
-              subdivision: validated.subdivision,
-              firstName: validated.firstName,
-              middleName: validated.middleName,
-              lastName: validated.lastName,
-              fullName: validated.fullName,
-              enrollmentNumRegister: validated.enrollmentNumRegister,
-              enrollmentYear: validated.enrollmentYear,
-              enrollmentMonth: validated.enrollmentMonth,
-              reasonFor: validated.reasonFor,
-              reasonForEdit: validated.reasonForEdit,
-              carpenterId: validated.carpenterId,
-              motherName: validated.motherName,
-              fatherName: validated.fatherName,
-              husbandName: validated.husbandName,
-              religion: validated.religion,
-              workability: validated.workability,
-              physicalDisability: validated.physicalDisability,
-              officer: validated.officer,
-              officeName: validated.officeName,
-              salutation: validated.salutation,
-              certificateNumber: validated.certificateNumber,
-              candidateNumber: validated.candidateNumber,
-              dateOfBirth: validated.dateOfBirth,
-              occupationProfession: validated.occupationProfession,
-              maritalStatus: validated.maritalStatus,
-              guardiansName: validated.guardiansName,
-              disability: validated.disability,
-              typeofDisability: validated.typeofDisability,
-              pinCode: validated.pinCode,
-              idType: validated.idType,
-              typeofAlternateID: validated.typeofAlternateID,
-              idNo: validated.idNo,
-              educationLevel: validated.educationLevel,
-              preTrainingStatus: validated.preTrainingStatus,
-              previousExperienceSector: validated.previousExperienceSector,
-              noofmonthsofpreviousexperience: validated.noofmonthsofpreviousexperience,
-              employed: validated.employed,
-              employmentStatus: validated.employmentStatus,
-              employmentDetails: validated.employmentDetails,
-              heardAboutUs: validated.heardAboutUs,
-              nomineeName: validated.nomineeName,
-              nomineeGender: validated.nomineeGender,
-              nomineeDOB: validated.nomineeDOB,
-              nomineeRelationship: validated.nomineeRelationship,
-              emptyColumn: validated.emptyColumn
-            }
-          })
-        );
-        success++;
-      } catch (err) {
-        failed++;
-        diagnostics.push({ row: index + 1, status: 'FAILED', details: err.message });
-      }
-    }
+//         currentMaxSr++;
+//         importOps.push(
+//           prisma.record.create({
+//             data: {
+//               srNo: currentMaxSr,
+//               category: row[mapping.category] || 'Other',
+//               nameOfCarpenter: validated.nameOfCarpenter,
+//               nameOfOrganization: validated.nameOfOrganization,
+//               specialization: validated.specialization,
+//               communication: validated.communication,
+//               state: validated.state,
+//               districtCity: validated.districtCity,
+//               address: validated.address,
+//               certificateLink: validated.certificateLink,
+//               insuranceLink1: validated.insuranceLink1,
+//               insuranceLink2: validated.insuranceLink2,
+//               customColumn: validated.customColumn,
+//               remarks: validated.remarks,
+//               enrollmentNumber: validated.enrollmentNumber,
+//               enrollmentDate: validated.enrollmentDate,
+//               subdivision: validated.subdivision,
+//               firstName: validated.firstName,
+//               middleName: validated.middleName,
+//               lastName: validated.lastName,
+//               fullName: validated.fullName,
+//               enrollmentNumRegister: validated.enrollmentNumRegister,
+//               enrollmentYear: validated.enrollmentYear,
+//               enrollmentMonth: validated.enrollmentMonth,
+//               reasonFor: validated.reasonFor,
+//               reasonForEdit: validated.reasonForEdit,
+//               carpenterId: validated.carpenterId,
+//               motherName: validated.motherName,
+//               fatherName: validated.fatherName,
+//               husbandName: validated.husbandName,
+//               religion: validated.religion,
+//               workability: validated.workability,
+//               physicalDisability: validated.physicalDisability,
+//               officer: validated.officer,
+//               officeName: validated.officeName,
+//               salutation: validated.salutation,
+//               certificateNumber: validated.certificateNumber,
+//               candidateNumber: validated.candidateNumber,
+//               dateOfBirth: validated.dateOfBirth,
+//               occupationProfession: validated.occupationProfession,
+//               maritalStatus: validated.maritalStatus,
+//               guardiansName: validated.guardiansName,
+//               disability: validated.disability,
+//               typeofDisability: validated.typeofDisability,
+//               pinCode: validated.pinCode,
+//               idType: validated.idType,
+//               typeofAlternateID: validated.typeofAlternateID,
+//               idNo: validated.idNo,
+//               educationLevel: validated.educationLevel,
+//               preTrainingStatus: validated.preTrainingStatus,
+//               previousExperienceSector: validated.previousExperienceSector,
+//               noofmonthsofpreviousexperience: validated.noofmonthsofpreviousexperience,
+//               employed: validated.employed,
+//               employmentStatus: validated.employmentStatus,
+//               employmentDetails: validated.employmentDetails,
+//               heardAboutUs: validated.heardAboutUs,
+//               nomineeName: validated.nomineeName,
+//               nomineeGender: validated.nomineeGender,
+//               nomineeDOB: validated.nomineeDOB,
+//               nomineeRelationship: validated.nomineeRelationship,
+//               emptyColumn: validated.emptyColumn
+//             }
+//           })
+//         );
+//         success++;
+//       } catch (err) {
+//         failed++;
+//         diagnostics.push({ row: index + 1, status: 'FAILED', details: err.message });
+//       }
+//     }
 
-    if (importOps.length > 0) {
-      await prisma.$transaction(importOps);
-    }
+//     if (importOps.length > 0) {
+//       await prisma.$transaction(importOps);
+//     }
 
-    // Remove temp file
-    fs.unlinkSync(tempPath);
+//     // Remove temp file
+//     fs.unlinkSync(tempPath);
 
-    // Save Ingestion Diagnostics Log
-    const importLog = await prisma.import.create({
-      data: {
-        fileName: filePath,
-        fileType: isExcel ? 'EXCEL' : 'CSV',
-        totalRows: parsedRows.length,
-        successfullyImported: success,
-        failedRows: failed,
-        duplicateRows: duplicates,
-        status: failed === 0 ? 'COMPLETED' : (success > 0 ? 'PARTIAL' : 'FAILED'),
-        logDetails: JSON.stringify(diagnostics)
-      }
-    });
+//     // Save Ingestion Diagnostics Log
+//     const importLog = await prisma.import.create({
+//       data: {
+//         fileName: filePath,
+//         fileType: isExcel ? 'EXCEL' : 'CSV',
+//         totalRows: parsedRows.length,
+//         successfullyImported: success,
+//         failedRows: failed,
+//         duplicateRows: duplicates,
+//         status: failed === 0 ? 'COMPLETED' : (success > 0 ? 'PARTIAL' : 'FAILED'),
+//         logDetails: JSON.stringify(diagnostics)
+//       }
+//     });
 
-    await prisma.activityLog.create({
-      data: {
-        userId: req.user.id,
-        userName: req.user.name,
-        action: 'IMPORT',
-        details: `Imported file ${filePath}. Successfully added: ${success}, duplicates ignored: ${duplicates}, failures: ${failed}`
-      }
-    });
+//     await prisma.activityLog.create({
+//       data: {
+//         userId: req.user.id,
+//         userName: req.user.name,
+//         action: 'IMPORT',
+//         details: `Imported file ${filePath}. Successfully added: ${success}, duplicates ignored: ${duplicates}, failures: ${failed}`
+//       }
+//     });
 
-    res.json({
-      importLog,
-      success,
-      failed,
-      duplicates
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+//     res.json({
+//       importLog,
+//       success,
+//       failed,
+//       duplicates
+//     });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
 
 // app.post('/api/records/:id/upload-document', authenticateToken, upload.single('file'), async (req, res) => {
 //   try {
