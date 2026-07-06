@@ -9,7 +9,8 @@
     "dev:client": "vite",
     "start": "node server/server.js",
     "build:client": "vite build",
-    "preview:client": "vite preview"
+    "preview:client": "vite preview",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^5.14.0",
