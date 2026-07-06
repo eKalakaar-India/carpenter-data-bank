@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+db.sqlite
+prisma/dev.db
+uploads/temp/*
+!uploads/temp/.gitkeep
+uploads/documents/*
+!uploads/documents/.gitkeep
+.DS_Store
+.gemini/

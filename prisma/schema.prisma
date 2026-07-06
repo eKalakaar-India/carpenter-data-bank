@@ -1,0 +1,112 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("USER") // ADMIN, USER
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Record {
+  id                                String   @id @default(uuid())
+  srNo                              Int?
+  category                          String   @default("Other") // Master Carpenter, Apprentice, Cabinet Maker, Framer, Custom
+  nameOfCarpenter                   String?
+  nameOfOrganization                String?
+  specialization                    String?
+  communication                     String?  // Unified communication field (Phones + Emails joined)
+  state                             String?  // Separate State field for filtering/searching
+  districtCity                      String?  // Separate City/District field
+  address                           String?  // Rest of the consolidated address info
+  certificateLink                   String?
+  insuranceLink1                    String?
+  insuranceLink2                    String?
+  customColumn                      String?
+  remarks                           String?
+  enrollmentNumber                  String?
+  enrollmentDate                    String?
+  subdivision                       String?
+  firstName                         String?
+  middleName                        String?
+  lastName                          String?
+  fullName                          String?
+  enrollmentNumRegister             String?
+  enrollmentYear                    String?
+  enrollmentMonth                   String?
+  reasonFor                         String?
+  reasonForEdit                     String?
+  carpenterId                       String?
+  motherName                        String?
+  fatherName                        String?
+  husbandName                       String?
+  religion                          String?
+  workability                       String?
+  physicalDisability                String?
+  officer                           String?
+  officeName                        String?
+  
+  // Specific columns from Columns.xlsx
+  salutation                        String?
+  certificateNumber                 String?
+  candidateNumber                   String?
+  dateOfBirth                       String?
+  occupationProfession              String?
+  maritalStatus                     String?
+  guardiansName                     String?
+  disability                        String?
+  typeofDisability                  String?
+  pinCode                           String?
+  idType                            String?
+  typeofAlternateID                 String?
+  idNo                              String?
+  educationLevel                    String?
+  preTrainingStatus                 String?
+  previousExperienceSector          String?
+  noofmonthsofpreviousexperience    String?
+  employed                          String?
+  employmentStatus                  String?
+  employmentDetails                 String?
+  heardAboutUs                      String?
+  nomineeName                       String?
+  nomineeGender                     String?
+  nomineeDOB                        String?
+  nomineeRelationship               String?
+  emptyColumn                       String?
+  
+  isDeleted                         Boolean  @default(false)
+  createdAt                         DateTime @default(now())
+  updatedAt                         DateTime @updatedAt
+}
+
+
+model Import {
+  id                    String   @id @default(uuid())
+  fileName              String
+  fileType              String
+  totalRows             Int
+  successfullyImported  Int
+  failedRows            Int
+  duplicateRows         Int
+  status                String   @default("COMPLETED") // COMPLETED, FAILED, PARTIAL
+  logDetails            String?  // JSON string of import diagnostics
+  createdAt             DateTime @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  userName  String?
+  action    String
+  details   String
+  createdAt DateTime @default(now())
+}
