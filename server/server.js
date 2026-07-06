@@ -1296,7 +1296,6 @@ app.get('/api/analytics', authenticateToken, async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Luxury Cinematic Server listening on port ${PORT}`);
-});
+
+export default app;
 
